@@ -17,6 +17,18 @@
  * along with Access to Memory (AtoM).  If not, see <http://www.gnu.org/licenses/>.
  */
 
+function asaLog($timer, $msg)
+{
+  $fp = fopen('/tmp/asa.log', 'a');
+  if (!$fp)
+  {
+    throw new sfException("Failed to open asa log file");
+  }
+
+  fprintf($fp, "[%s | {$timer->elapsed()}s elapsed] %s\n", strftime('%r'), $msg);
+  fclose($fp);
+}
+
 /**
  * Extended methods for Information object model
  *
@@ -237,7 +249,13 @@ class QubitInformationObject extends BaseInformationObject
 
   public function save($connection = null)
   {
+    $t = new QubitTimer;
+    asaLog($t, 'QubitInformationObject::save(): starting');
+
+
     parent::save($connection);
+
+    asaLog($t, 'QubitInformationObject::save(): finished parent\'s save()');
 
     // Save child information objects
     foreach ($this->informationObjectsRelatedByparentId->transient as $item)
@@ -253,6 +271,8 @@ class QubitInformationObject extends BaseInformationObject
       {
       }
     }
+
+    asaLog($t, 'QubitInformationObject::save(): finished saving child info objects');
 
     // Save updated related events (update search index after updating all
     // related objects that are included in the index document)
@@ -271,6 +291,8 @@ class QubitInformationObject extends BaseInformationObject
       {
       }
     }
+
+    asaLog($t, 'QubitInformationObject::save(): finished saving related events');
 
     // Save new digital objects
     // TODO Allow adding additional digital objects as derivatives
@@ -292,6 +314,8 @@ class QubitInformationObject extends BaseInformationObject
       break; // Save only one digital object per information object
     }
 
+    asaLog($t, 'QubitInformationObject::save(): finished saving associated digital objects');
+
     // Save updated Status
     $hasPubStatus = false;
     foreach ($this->statuss as $item)
@@ -309,6 +333,8 @@ class QubitInformationObject extends BaseInformationObject
       $item->save($connection);
     }
 
+    asaLog($t, 'QubitInformationObject::save(): finished saving related statuses');
+
     // Force a publication status
     if ($this->id != QubitInformationObject::ROOT_ID && !$hasPubStatus)
     {
@@ -322,6 +348,8 @@ class QubitInformationObject extends BaseInformationObject
     }
 
     QubitSearch::getInstance()->update($this);
+
+    asaLog($t, 'QubitInformationObject::save(): finished saving publication status & updating search index. DONE.');
 
     return $this;
   }
