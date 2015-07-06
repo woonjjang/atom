@@ -479,6 +479,19 @@ class QubitInformationObject extends BaseInformationObject
           }
         }
       }
+
+      // Maybe the parents aren't saved yet, try alternate method...
+      if (null === $repository)
+      {
+        $io = $this;
+        while ($io = $io->parent)
+        {
+          if (null !== $repository = $io->getRepository())
+          {
+            break;
+          }
+        }
+      }
     }
 
     return $repository;
@@ -1545,6 +1558,17 @@ class QubitInformationObject extends BaseInformationObject
    */
   public function setActorByName($name, $options)
   {
+    $name = trim($name);
+    // Kludge: get source-name from temporary file
+    $snFile = '/tmp/source-name';
+    $fh = fopen($snFile, 'r');
+
+    if (!$fh)
+      throw new sfException("$snFile does not exist");
+
+    $sourceName = rtrim(fread($fh, 1024));
+    fclose($fh);
+
     // Only create and link actor if the event or relation type is indicated
     if (!isset($options['event_type_id']) && !isset($options['relation_type_id']))
     {
@@ -1571,13 +1595,25 @@ class QubitInformationObject extends BaseInformationObject
     // Check relations with other descriptions in the repository
     if (!$actor)
     {
-      $repoId = null;
-      if (null !== $repo = $this->getRepository(array('inherit' => true)))
-      {
-        $repoId = $repo->id;
-      }
+      $sql  = 'SELECT target_id FROM keymap WHERE target_name=?';
+      $sql .= ' AND source_name="'.$sourceName.'"';
+      $sql .= ' AND source_id ';
 
-      $actor = QubitActor::getByNameAndRepositoryId($name, $repoId);
+      $repo = $this->getRepository(array('inherit' => true));
+
+      if ($repo)
+        $sql .= '='.$repo->id;
+      else
+        $sql .= ' IS NULL';
+
+      $actorId = QubitPdo::fetchColumn($sql, array($name));
+
+      if ($actorId)
+      {
+        $actor = QubitActor::getById($actorId);
+        if ($actor)
+          print "Got actor $name from keymap (repoId: {$repo->id})\n";
+      }
     }
 
     // If there isn't a match create a new actor
@@ -1609,6 +1645,23 @@ class QubitInformationObject extends BaseInformationObject
       }
 
       $actor->save();
+
+      $keymap = new QubitKeymap;
+
+      if ($repo)
+        $keymap->sourceId = $repo->id;
+      else if ($this->repositoryId)
+        $keymap->sourceId = $this->repositoryId;
+      else
+        $keymap->sourceId = null;
+
+      $keymap->sourceName = $sourceName;
+      $keymap->targetId   = $actor->id;
+      $keymap->targetName = $actor->getAuthorizedFormOfName(array('cultureFallback' => true));
+
+      print "Creating keymap entry for $name (source name: $sourceName, repositoryId: {$keymap->sourceId})\n";
+
+      $keymap->save();
     }
 
     // Create event or relation to link the information object and actor

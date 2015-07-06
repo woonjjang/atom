@@ -1083,9 +1083,11 @@ class QubitFlatfileImport
           $actorOptions['history'] = $options['actorHistory'];
         }
 
-        if (property_exists($this->object, 'repositoryId') && isset($this->object->repositoryId))
+        if ($this->object instanceOf QubitInformationObject)
         {
-          $actorOptions['repositoryId'] = $this->object->repositoryId;
+          $repo = $this->object->getRepository(array('inherit' => true));
+          if ($repo)
+            $actorOptions['repositoryId'] = $repo->id;
         }
 
         $actor = $this->createOrFetchActor($options['actorName'], $actorOptions);
@@ -1159,11 +1161,45 @@ class QubitFlatfileImport
    */
   public static function createOrFetchActor($name, $options = array())
   {
-    // Get actor or create a new one. If the actor exists the data is not overwritten
-    if (null === $actor = QubitActor::getByNameAndRepositoryId($name, $options['repositoryId']))
+    // Kludge: get source-name from temporary file
+    $snFile = '/tmp/source-name';
+    $fh = fopen($snFile, 'r');
+
+    if (!$fh)
+      throw new sfException("$snFile does not exist");
+
+    $sourceName = rtrim(fread($fh, 1024));
+    fclose($fh);
+
+    $sql  = 'SELECT target_id FROM keymap WHERE target_name=?';
+    $sql .= ' AND source_name="'.$sourceName.'"';
+    $sql .= ' AND source_id ';
+
+    if ($options['repositoryId'])
+      $sql .= '='.$options['repositoryId'];
+    else
+      $sql .= ' IS NULL';
+
+    $actorId = QubitPdo::fetchColumn($sql, array($name));
+    $actor = QubitActor::getById($actorId);
+
+    if ($actor)
     {
-      unset($options['repositoryId']);
+      print "Fetched actor from keymap (id=$actorId)\n";
+      return $actor;
+    }
+    else // Get actor or create a new one. If the actor exists the data is not overwritten
+    {
+      print "No actor found in keymap named '$name' for this repository, creating new one...\n";
+
       $actor = QubitFlatfileImport::createActor($name, $options);
+
+      $keymap = new QubitKeymap;
+      $keymap->sourceId   = $options['repositoryId'] ?: null;
+      $keymap->sourceName = $sourceName;
+      $keymap->targetId   = $actor->id;
+      $keymap->targetName = $actor->getAuthorizedFormOfName(array('cultureFallback' => true));
+      $keymap->save();
     }
 
     return $actor;

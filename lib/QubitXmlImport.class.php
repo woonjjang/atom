@@ -305,7 +305,7 @@ class QubitXmlImport
 
           if ($currentCulture !== $twoCharCode)
           {
-            $this->errors[] = sfContext::getInstance()->i18n->__('EAD "langmaterial" is set to').': "'.$isocode.'" ('.format_language($twoCharCode, 'en').'). '.sfContext::getInstance()->i18n->__('Your XML document has been saved in this language and your user interface has just been switched to this language.');
+            //$this->errors[] = sfContext::getInstance()->i18n->__('EAD "langmaterial" is set to').': "'.$isocode.'" ('.format_language($twoCharCode, 'en').'). '.sfContext::getInstance()->i18n->__('Your XML document has been saved in this language and your user interface has just been switched to this language.');
           }
           $sf_user->setCulture($twoCharCode);
           // can only set to one language, so have to break once the first valid language is encountered
@@ -394,8 +394,12 @@ class QubitXmlImport
       $currentObject->setPublicationStatus(sfConfig::get('app_defaultPubStatus', QubitTerm::PUBLICATION_STATUS_DRAFT_ID));
     }
 
+$currentObject->disableNestedSetUpdating = true;
+
     // save the object after it's fully-populated
     $currentObject->save();
+
+$currentObject->disableNestedSetUpdating = false;
 
     // write the ID onto the current XML node for tracking
     $domNode->setAttribute('xml:id', $currentObject->id);
