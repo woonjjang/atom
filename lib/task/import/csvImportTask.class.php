@@ -929,7 +929,7 @@ EOF;
 
         // This will import only a single digital object;
         // if both a URI and path are provided, the former is preferred.
-        if ($uri = $self->rowStatusVars['digitalObjectURI'])
+        if (/* DISABLE digitalObjectURI column */ 0 && $uri = $self->rowStatusVars['digitalObjectURI'])
         {
           // importFromURI can raise an exception if the download hits a timeout
           $do = new QubitDigitalObject;
