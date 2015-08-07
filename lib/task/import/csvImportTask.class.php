@@ -40,7 +40,7 @@ EOF;
   protected function configure()
   {
     parent::configure();
-
+    error_reporting(E_ALL);
     $this->addOptions(array(
       new sfCommandOption(
         'source-name',
@@ -927,34 +927,14 @@ EOF;
         // add creation events
         parent::importCreators($self);
 
-        // This will import only a single digital object;
-        // if both a URI and path are provided, the former is preferred.
+        // create uri notes for later correlations
         if ($uri = $self->rowStatusVars['digitalObjectURI'])
         {
-          // importFromURI can raise an exception if the download hits a timeout
-          $do = new QubitDigitalObject;
-          $do->importFromURI($uri);
-          $do->informationObject = $self->object;
-          $do->createDerivatives = false;
-          $do->indexOnSave = false;
-          $do->save();
+          createUriNote($self->object, $uri);
         }
         else if ($path = $self->rowStatusVars['digitalObjectPath'])
         {
-          if (false === $content = file_get_contents($path))
-          {
-            $this->log("Unable to read file: ".$path);
-          }
-          else
-          {
-            $do = new QubitDigitalObject;
-            $do->assets[] = new QubitAsset($path, $content);
-            $do->usageId = QubitTerm::MASTER_ID;
-            $do->informationObject = $self->object;
-            $do->createDerivatives = false;
-            $do->indexOnSave = false;
-            $do->save($conn);
-          }
+          createUriNote($self->object, $path);
         }
       }
     ));
@@ -1061,4 +1041,14 @@ function refreshTaxonomyTerms($taxonomyId)
 {
   $result = QubitFlatfileImport::loadTermsFromTaxonomies(array($taxonomyId => 'terms'));
   return $result['terms'];
+}
+
+function createUriNote($object, $uri)
+{
+    print "Creating uri note for {$object->id} - ".str_replace('//', '/', $uri)."\n";
+    $n = new QubitNote;
+    $n->object = $object;
+    $n->scope = 'uri_note';
+    $n->content = str_replace('//', '/', $uri);
+    $n->save();
 }
