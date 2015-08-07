@@ -929,12 +929,14 @@ EOF;
 
         // This will import only a single digital object;
         // if both a URI and path are provided, the former is preferred.
-        if (/* DISABLE digitalObjectURI column */ 0 && $uri = $self->rowStatusVars['digitalObjectURI'])
+        if ($uri = $self->rowStatusVars['digitalObjectURI'])
         {
           // importFromURI can raise an exception if the download hits a timeout
           $do = new QubitDigitalObject;
           $do->importFromURI($uri);
           $do->informationObject = $self->object;
+          $do->createDerivatives = false;
+          $do->indexOnSave = false;
           $do->save();
         }
         else if ($path = $self->rowStatusVars['digitalObjectPath'])
@@ -949,6 +951,8 @@ EOF;
             $do->assets[] = new QubitAsset($path, $content);
             $do->usageId = QubitTerm::MASTER_ID;
             $do->informationObject = $self->object;
+            $do->createDerivatives = false;
+            $do->indexOnSave = false;
             $do->save($conn);
           }
         }
