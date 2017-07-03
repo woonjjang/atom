@@ -172,7 +172,7 @@ class RepositoryBrowseAction extends DefaultBrowseAction
     $this->pager->setMaxPerPage($this->limit);
     $this->pager->init();
 
-    $this->populateFacets($resultSet);
+    // $this->populateFacets($resultSet);
 
     if (isset($request->view) && in_array($request->view, $allowedViews))
     {
