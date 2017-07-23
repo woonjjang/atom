@@ -53,6 +53,11 @@ class arXmlExportSingleFileJob extends arBaseJob
     $this->job->setStatusCompleted();
     $this->job->save();
 
+    // Request clearing of opcache
+    $curl = curl_init();
+    curl_setopt($curl, CURLOPT_URL, (string)QubitSetting::getByName('siteBaseUrl') .'?_opcache=clear');
+    curl_exec($curl);
+
     return true;
   }
 
