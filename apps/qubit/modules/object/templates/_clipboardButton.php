@@ -6,3 +6,4 @@
   data-alt-title="<?php echo $altTitle ?>">
   <?php echo $title ?>
 </button>
+<script>Qubit.slugsDisplayed.push("<?php echo $slug ?>");</script>

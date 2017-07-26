@@ -1,5 +1,7 @@
 <footer>
 
+  <?php echo get_component('user', 'asyncStatusUpdater') ?>
+
   <?php if (QubitAcl::check('userInterface', 'translate')): ?>
     <?php echo get_component('sfTranslatePlugin', 'translate') ?>
   <?php endif; ?>

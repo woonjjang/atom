@@ -2,9 +2,6 @@
 
   <button class="top-item" data-toggle="dropdown" data-target="#" aria-expanded="false">
     <?php echo __('Clipboard') ?>
-    <?php if ($count > 0): ?>
-      <span><?php echo $count ?></span>
-    <?php endif; ?>
   </button>
 
   <div class="top-dropdown-container">
@@ -15,11 +12,7 @@
 
     <div class="top-dropdown-header">
       <h2><?php echo __('Clipboard') ?></h2>
-      <span id="count-block" data-information-object-label="<?php echo sfConfig::get('app_ui_label_informationobject') ?>" data-actor-object-label="<?php echo sfConfig::get('app_ui_label_actor') ?>" data-repository-object-label="<?php echo sfConfig::get('app_ui_label_repository') ?>">
-        <?php foreach ($countByType as $objectType => $countType): ?>
-          <?php echo __('%1% count: %2%', array('%1%' => $objectTypes[$objectType], '%2%' => $countType)); ?><br />
-        <?php endforeach; ?>
-      </span>
+      <span id="count-block" data-information-object-label="<?php echo sfConfig::get('app_ui_label_informationobject') ?>" data-actor-object-label="<?php echo sfConfig::get('app_ui_label_actor') ?>" data-repository-object-label="<?php echo sfConfig::get('app_ui_label_repository') ?>"></span>
     </div>
 
     <div class="top-dropdown-body">

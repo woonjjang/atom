@@ -17,36 +17,17 @@
  * along with Access to Memory (AtoM).  If not, see <http://www.gnu.org/licenses/>.
  */
 
-class ObjectClipboardButtonComponent extends sfComponent
+/**
+ * Display "aclMenu" navigation menu
+ *
+ * @package    AccesstoMemory
+ * @subpackage user
+ * @author     David Juhasz <david@artefactual.com>
+ */
+class UserAsyncStatusUpdaterComponent extends sfComponent
 {
   public function execute($request)
   {
-    $this->url = url_for(array('module' => 'user', 'action' => 'clipboardToggleSlug'));
-    $this->class = 'clipboard';
-
-    $i18n = $this->context->i18n;
-
-    if ($this->wide)
-    {
-      $this->class .= '-wide';
-      $this->tooltip = false;
-      $title = $i18n->__('Add');
-      $altTitle = $i18n->__('Remove');
-    }
-    else
-    {
-      $this->tooltip = true;
-      $title = $i18n->__('Add to clipboard');
-      $altTitle = $i18n->__('Remove from clipboard');
-    }
-
-    $this->title = $title;
-    $this->altTitle = $altTitle;
-
-    // Mix in repository page specific styles
-    if (!empty($this->repositoryOrDigitalObjBrowse))
-    {
-      $this->class .= ' repository-or-digital-obj-browse';
-    }
+    // TODO: does this need to be a component?
   }
 }
